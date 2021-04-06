@@ -6,7 +6,7 @@ In recent years, AI technology oriented with machine learning and deep learning 
 3. NLP (Natural Language Processing): automatic search engine, dialogue service robot, text classification, intelligent translation, etc.  
 4. Scientific research: applied in many research fields such as physics, biology, medicine, etc. High-energy particle collision classification, cosmic celestial map data analysis, galaxy shape modeling, protein folding prediction of biological structure, precision medical treatment and disease prediction.      
        
-![Figure 1.png](../Images/Compiler/Figure 1.png)  
+![Figure 1.png](../Images/Compiler/cover.png)  
       
 These applications have spawned more new models: CNN, RNN, LSTM, GAN, GNN, and also spawned the emergence of deep learning frameworks such as Tensorflow, Pytorch, Mxnet, and Caffe. At present, the training framework has begun to converge, gradually forming a duo situation where PyTorch leads the academic world and TensorFlow leads the industry.    
 
@@ -37,80 +37,76 @@ It is composed of four levels from top to bottom：
 > _We can use operator fusion to avoid frequent direct reading and writing of intermediate data between registers and memory, thereby improving overall inference performance  。_  
      
 ![Figure 5.png](../Images/Compiler/Figure 5.png)  
-> _Nividia通过把conv, bn, relu这三个算子融合成一个算子 fuse- CBR. 实现了三倍的推理性能提升。_  
+> _Nividia has achieved a threefold increase in inference performance by fusing conv, bn, and relu into one operator fuse-CBR._    
      
-3.  算子层级（operator level/kernel level）算子层级主要是张量计算。为了实现这些计算在硬件上高效实现，发挥芯片的性能，通常硬件芯片配有专门优化的算子计算库，如Intel的MKL, Nvidia的CuDNN, TensorRT。这个层级需要支持每个硬件后端的每个算子实现。  
-4.  各硬件后端：GPU, ARM CPU, X86 CPU, NPU等。  
+3.  Operator level (operator level/kernel level): The operator level is mainly about tensor calculation. In order to realize these calculations efficiently on the hardware and give full play to the performance of the chip, the hardware chip is usually equipped with specially optimized operator calculation libraries, such as Intel's MKL, Nvidia's CuDNN, and TensorRT. This level needs to support every operator implementation of every hardware backend.     
+4. Various hardware backends: GPU, ARM CPU, X86 CPU, NPU, etc.     
      
 ![Figure 7.png](../Images/Compiler/Figure 7.png)  
->_自深度学习编译器的概念提出以来，各类编译器层出不穷。_  
+>_Since the concept of the deep learning compiler was put forward, various types of compilers have emerged in an endless stream。_  
       
 ___
-## 二、TVM的前世今生  
-在编译器快速发展的浪潮中，较为突出的便是TVM（Tensor Virtual Machine)。  
+## 二、The story of TVM      
+In the wave of rapid development of compilers, one of the most prominent one is TVM (Tensor Virtual Machine)。  
 
-TVM最早提出是2017年，是深度学习系统的编译器堆栈。  
+TVM was first proposed in 2017 as a compiler stack for deep learning systems.     
 
-第一代TVM的设计借鉴了借鉴传统编译器框架LLVM的设计思路，设计抽象出中间表示层，不同的模型只需要开发相应的前端接口，不同的后端只需要开发相应的后端接口。  
-TVM全称为Tensor Virtual Machine，属于算子层级，主要用于张量计算，提供独立于硬件的底层计算中间表示，采用各种方式（循环分块，缓存优化等）对相应的计算进行优化。第一代的图层级表示叫NNVM（Neural Network Virtual Machine）。NNVM的设计目标是：将来自不通深度学习框架的计算图转换为统一的计算图中间表示（IR)，对之进行优化。  
+The design of the first generation of TVM draws on the design ideas of the traditional compiler framework LLVM, and the design abstracts the middle presentation layer. Different models only need to develop corresponding front-end interfaces, and different back-ends only need to develop corresponding back-end interfaces.     
+TVM is called Tensor Virtual Machine, which belongs to the operator level. It is mainly used for tensor calculation and provides an intermediate representation of the underlying calculation independent of the hardware. Various methods (circular block, cache optimization, etc.) are used to optimize the corresponding calculation. The first generation of layer-level representation is called NNVM (Neural Network Virtual Machine). The design goal of NNVM is to convert the calculation graph from a different deep learning framework into a unified intermediate representation (IR) of the calculation graph and optimize it.     
 
-第一代的静态图存在一定的缺陷：  
-1. 不能较好支持控制流，如分支跳转，循环等。  
-2.  不能支持计算图输入形状，取决于输入tensor大小的模型，比如word2vec等。  
+The first generation of static images has certain defects:    
+1. Cannot support control flow well, such as branch jump, loop, etc.     
+2. Can not support the input shape of the calculation graph, depending on the input tensor size model, such as word2vec.       
 
-虽然Tensorflow有如tf.cond.Tf.while_loop的控制接口来在某种程度上解决第一个问题，tf.fold来解决第二个问题，但是这种方式对刚刚接触深度学习框架的小白来说不是特别友好。  
+Although Tensorflow has a control interface like tf.cond.Tf.while_loop to solve the first problem to some extent, tf.fold solves the second problem, but this method is not particularly friendly for rookies who have just come into contact with deep learning framework.      
 
-后面出现的动态图摒弃了传统的计算图先定义，后执行的方式，采用了计算图在运行时定义的模式，这种计算图就称为动态图。  
-第二代TVM 的图计算层变为Relay VM，Relay和第一代的图计算表示NNVM的最主要区别是Relay IR除了支持dataflow（静态图）， 能够更好地解决control flow（动态图）。它不仅是一种计算图的中间表示，也支持自动微分。  
+The dynamic graphs that appear later abandon the traditional way of calculating graphs that are defined first and then executed, and adopt the mode defined by the calculation graph at runtime. This kind of calculation graph is called a dynamic graph.    
+The graph calculation layer of the second-generation TVM becomes Relay VM. The main difference between Relay and the first-generation graph calculation indicator NNVM is that in addition to supporting dataflow (static graph), Relay IR can better solve control flow (dynamic graph). It is not only an intermediate representation of a calculation graph, but also supports automatic differentiation.       
     
 ![Figure 19.png](../Images/Compiler/Figure 19.png)  
       
-总结一下，目前TVM的架构是：  
-1. 最高层级支持主流的深度学习前端框架，包括TensorFlow,MXNet,Pytorch等。  
-2.  Relay IR支持可微分，该层级进行图融合，数据重排等图优化操作。  
-3.  基于tensor张量化计算图，并根据后端进行硬件原语级优化，autoTVM根据优化目标探索搜索空间，找到最优解。  
-4.  后端支持ARM、CUDA/Metal/OpenCL、加速器VTA（Versatile Tensor Accelerator）。  
+To sum up, the current structure of TVM is:      
+1. The highest level supports mainstream deep learning front-end frameworks, including TensorFlow, MXNet, Pytorch, etc.     
+2. Relay IR supports differentiability. This level performs graph fusion, data rearrangement and other graph optimization operations.       
+3. Based on the tensor quantization calculation graph and the hardware primitive-level optimization according to the back-end, autoTVM explores the search space according to the optimization goal and finds the optimal solution.     
+4. The backend supports ARM, CUDA/Metal/OpenCL, accelerator VTA (Versatile Tensor Accelerator).       
 ___  
 ## 三、Halide  
-Halide于2012年提出，主要用于自动优化。其嵌入到C++中，是MIT研究人员专门为图像处理设计的一种程序语言。Halide语言易于编写，语法简单，数据结构清晰，能过自动对代码进行优化，使得程序获得比较好的执行效率。  
-它设计的核心思想是把算法和调度分离。这样做的好处是，在给定算法的情况下只需要去调整它的Schedule 调度选择，不用重写算法实现不同的Schedule。当调整Schedule、探索设计空间时也不会担心因为重写算法而导致计算的正确性会发生变化。  
-Algorithm部分主要是算法描述和计算的数学表达式。  
-Halide于2012年提出，主要用于自动优化。其嵌入到C++中，是MIT研究人员专门为图像处理设计的一种程序语言。Halide语言易于编写，语法简单，数据结构清晰，能过自动对代码进行优化，使得程序获得比较好的执行效率。
+Halide was proposed in 2012 and is mainly used for automatic optimization. Embedded in C++, it is a programming language specially designed for image processing by MIT researchers. The Halide language is easy to write, simple in grammar, clear in data structure, and can automatically optimize the code, so that the program can achieve better execution efficiency.     
+The core idea of its design is to separate algorithm and scheduling. The advantage of this is that in the case of a given algorithm, you only need to adjust its Schedule scheduling options, without having to rewrite the algorithm to implement a different schedule. When adjusting the schedule and exploring the design space, there is no worry that the correctness of the calculation will change due to the rewriting of the algorithm.    
 
-它设计的核心思想是把算法和调度分离。这样做的好处是，在给定算法的情况下只需要去调整它的Schedule 调度选择，不用重写算法实现不同的Schedule。当调整Schedule、探索设计空间时也不会担心因为重写算法而导致计算的正确性会发生变化。
-
-Algorithm部分主要是算法描述和计算的数学表达式。
-Schedule部分则是告诉机器什么时候分配内存，如何计算（分块计算还是顺序计算）——目前已经提供了一些调度策略。  
+The Algorithm part is mainly the mathematical expression of algorithm description and calculation.   
+The Schedule part tells the machine when to allocate memory and how to calculate (block calculation or sequential calculation)-some scheduling strategies have been provided.     
     
 ![Figure 17.png](../Images/Compiler/Figure 17.png)   
      
 ![Figure 18.png](../Images/Compiler/Figure 18.png)  
-> _不同调度策略考虑重复冗余计算和局部性（locality)的权衡。_    
+> _Different scheduling strategies consider the trade-off between repeated redundant calculations and locality。_    
     
 ___
 ## 四、AutoKernel  
-深度学习模型能否成功在终端落地应用，满足产品需求，一个关键的指标就是神经网络模型的推理性能。  
-目前的高性能算子计算库主要是由高性能计算优化工程师进行手工开发。然而新的算法/硬件的不断涌现，导致了算子层级的优化开发工作量巨大。同时优化代码的工作并不是一件简单的事，它要求工程师既要精通计算机体系架构，又要熟悉算子的计算流程。  
-人才少，需求多，技术门槛高，因此我们认为算子优化自动化是未来的大趋势。而提出AutoKernel的初衷便是希望能把这个过程自动化，从小处入手，在算子层级的优化，实现优化代码的自动生成。  
+Whether the deep learning model can be successfully applied to the terminal and meet the product needs, a key indicator is the reasoning performance of the neural network model.    
+The current high-performance operator calculation library is mainly developed manually by high-performance computing optimization engineers. However, the continuous emergence of new algorithms/hardware has led to a huge workload of operator-level optimization and development. At the same time, optimizing the code is not a simple task. It requires engineers to be proficient in computer architecture as well as to be familiar with the calculation process of operators.    
+There are few talents, high demand, and high technical threshold. Therefore, we believe that operator optimization and automation is the general trend in the future. The original intention of proposing AutoKernel is to automate this process, start small, optimize at the operator level, and realize the automatic generation of optimized code.     
       
 ![Figure 11.png](../Images/Compiler/Figure 11.png)  
      
-AutoKernel的输入是算子的计算描述（如Conv、Poll、Fc），输出是经过优化的加速源码。  
-这一工具的开发旨在降低优化工作的门槛，不需要有底层汇编的知识门槛，不用手写优化汇编。可通过直接调用开发的工具包便可生成汇编代码。同时还提供了包含CPU、GPU的docker环境，无需部署开发环境，只需使用docker便可。还可通过提供的插件——plugin，可以把自动生成的算子一键集成到推理框架中——Tengine。  
+The input of AutoKernel is the calculation description of the operator (such as Conv, Poll, Fc), and the output is the optimized acceleration source code.    
+The development of this tool aims to lower the threshold of optimization work, without the knowledge threshold of the underlying assembly, and no need to write the optimization assembly by hand. The assembly code can be generated by directly calling the developed toolkit. At the same time, it also provides a docker environment containing CPU and GPU, no need to deploy development environment, just use docker. You can also integrate the automatically generated operator into the inference framework-Tengine with one click through the provided plug-in-plugin.     
       
 ![Figure 12.png](../Images/Compiler/Figure 12.png)  
      
-对应地，算子层级的AutoKernel则主要分为三个模块，  
-1. Op Generator：算子生成器，采用了开源的Hallide。  
-2.  AutoSearch：目前还在开发中，目标是通过机器学习、强化学习常用算法自动搜索出优化策略。  
-3.  AutoKernel Plugin：把生成的自动算子以插件的形式插入到Tengine中，和人工定制互为补充。  
+Correspondingly, the AutoKernel at the operator level is mainly divided into three modules,     
+1. Op Generator: Operator generator, using the open source Hallide.    
+2. AutoSearch: Currently under development, the goal is to automatically search for optimization strategies through machine learning and reinforcement learning commonly used algorithms.   
+3. AutoKernel Plugin: Insert the generated automatic operator into Tengine in the form of a plug-in, which complements manual customization.      
      
 ![Figure 13.png](../Images/Compiler/Figure 13.png)    
-> _Tengine对象层对接了不同的神经网络模型，图层级的NNIR包含了模型解析、图层优化，算子层级则包括高性能计算库（HCL lib）。_    
+> _The Tengine object layer is connected to different neural network models. The layer-level NNIR includes model analysis and layer optimization, and the operator level includes the high-performance computing library (HCL lib)._      
      
-AutoKernel Plugin主要分为生成和部署两部分，生成部分用Hallid填写算法描述和调度策略，执行时指定后端类型（基本覆盖目前的主流后端）。  
-部署部分则封装为Tengine的库，直接调用。  
+AutoKernel Plugin is mainly divided into two parts: generation and deployment. In the generation part, Hallid is used to fill in the algorithm description and scheduling strategy, and the back-end type is specified during execution (which basically covers the current mainstream back-ends).     
+The deployment part is packaged as a Tengine library and directly called.      
      
 ![Figure 14.png](../Images/Compiler/Figure 14.png)    
       
-相信随着更多开发者的加入，AutoKernel社区会有更大的突破与成长，在未来的深度学习编译器领域中，留下浓重的一笔！  
+We believe that with the contribution of more developers, the AutoKernel community will have greater breakthroughs and growth, leaving a strong fortune in the field of deep learning compilers in the future!
