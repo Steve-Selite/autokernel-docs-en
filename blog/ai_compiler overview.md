@@ -1,40 +1,40 @@
-# AutoKernel: 带你回顾神经网络编译器
-## 一、神经网络编译器概览
-近年来，以机器学习、深度学习为核心的AI技术得到迅猛发展，深度神经网络在各行各业得到广泛应用：  
-1.  CV（计算机视觉）：目标检测，场景识别，图像分割等。  
-2.  智慧语音：语音识别，声纹识别等。  
-3.  NLP（自然语言处理）：自动搜索引擎，对话服务机器人，文本分类，智能翻译等。  
-4.  科学研究：应用于物理、生物、医学等多研究领域。高能粒子对撞分类，宇宙天体图数据分析，星系形状建模，生物结构的蛋白质折叠预测，精准医疗与疾病预测。      
+# AutoKernel: To know more about Ai Compiler
+## 一、The overview of Ai Compiler
+In recent years, AI technology oriented with machine learning and deep learning has been rapidly developed, and deep neural network has been widely used in various industries:  
+1. CV (computer vision): target detection, scene recognition, image segmentation, etc.  
+2. Smart voice: voice recognition, voiceprint recognition, etc.  
+3. NLP (Natural Language Processing): automatic search engine, dialogue service robot, text classification, intelligent translation, etc.  
+4. Scientific research: applied in many research fields such as physics, biology, medicine, etc. High-energy particle collision classification, cosmic celestial map data analysis, galaxy shape modeling, protein folding prediction of biological structure, precision medical treatment and disease prediction.      
        
 ![Figure 1.png](../Images/Compiler/Figure 1.png)  
       
-这些应用催生更多的新模型出现：CNN, RNN, LSTM, GAN, GNN，也催生着如Tensorflow, Pytorch, Mxnet, Caffe等深度学习框架出现。目前训练框架开始收敛，逐步形成了PyTorch引领学术界，TensorFlow主导工业界的一个双雄局面。  
+These applications have spawned more new models: CNN, RNN, LSTM, GAN, GNN, and also spawned the emergence of deep learning frameworks such as Tensorflow, Pytorch, Mxnet, and Caffe. At present, the training framework has begun to converge, gradually forming a duo situation where PyTorch leads the academic world and TensorFlow leads the industry.    
 
-但是，深度学习算法要实现落地应用，必须被部署到硬件上，例如Google的TPU、华为麒麟NPU， 以及其他在FPGA上的架构创新。  
+However, in order for deep learning algorithms to be implemented, they must be deployed on hardware, such as Google’s TPU, Huawei’s Kirin NPU, and other architectural innovations on FPGA.    
      
 ![Figure 2.png](../Images/Compiler/Figure 2.png)  
        
-这些各训练框架训练出来的模型要如何部署到不同的终端硬件呢，这就需要深度学习神经网络编译器来解决。  
+When it comes to how to deploy the models trained by these training frameworks to different terminal hardware, this requires a deep learning neural network compiler to solve this problem.    
 
-在神经网络编译器之前，我们使用的是传统编译器。  
-**传统编译器：**  
-以LLVM（low level virtual machine）为例，其输入是高级编程语言源码，输出是机器码，由一系列模块化的编译器组件和工具链组成。  
-LLVM通过模块分为前端，中端（优化）和后端三部分。每当出现新的编程语言，只需要开发相应的前端，将编程语言转换成LLVM的中间表示；类似地，出现新的硬件架构，只需要开发相应的后端，对接上LLVM的中间表示。  
-模块化的划分，避免了因编程语言和CPU架构的翻新而引发的编译器适配性问题，大大简化了编译器的开发工作。
+Before the emergence of neural network compilers, we used traditional compilers.    
+**Traditional Compilers：**  
+Take LLVM (low level virtual machine) as an example, its input is high-level programming language source code, and its output is machine code. It consists of a series of modular compiler components and tool chains.   
+LLVM is divided into three parts: front-end, middle-end (optimized) and back-end through modules. Whenever a new programming language appears, only the corresponding front-end needs to be developed, and the programming language is converted into the intermediate representation of LLVM; similarly, when a new hardware architecture appears, only the corresponding back-end needs to be developed and connected to the intermediate representation of LLVM.  
+The modularization avoids the problem of compiler adaptability caused by the refurbishment of the programming language and CPU architecture, and greatly simplifies the development of the compiler.   
     
 ![Figure 3.png](/Images/Compiler/Figure 3.png)   
      
-**神经网络编译器：**  
-其输入是深度学习训练框架训练出来的模型定义文件，输出是能够在不同硬件高效执行的代码。  
+**Neutral Network Compiler：**  
+Its input is the model definition file trained by the deep learning training framework, and the output is the code that can be efficiently executed on different hardware. 
       
 ![Figure 6.png](../Images/Compiler/Figure 6.png)  
      
-从上至下由四个层级组成：  
-1. 最上层对接各个深度学习训练框架训练出来的算法模型（Tensorflow, Caffe, Pytorch, Mxnet等）。  
-2. 图层级（High-level IR）：神经网络的结构可以表示成计算图，图层级的操作则是对计算图进行一些和具体硬件和框架无关的操作，比如算子融合，内存分配优化，数据类型和数据维度的推导等。  
+It is composed of four levels from top to bottom：  
+1. The top layer is connected to the algorithm models trained by various deep learning training frameworks (Tensorflow, Caffe, Pytorch, Mxnet, etc.).    
+2. Layer level (High-level IR): The structure of the neural network can be expressed as a calculation graph, and layer-level operations are to perform some operations on the calculation graph that have nothing to do with the specific hardware and framework, such as operator fusion, memory allocation optimization, Derivation of data types and data dimensions, etc.     
       
 ![Figure 4.png](../Images/Compiler/Figure 4.png)  
-> _我们可通过算子融合的方式，避免中间数据频繁的在寄存器和内存直接来回读写，从而提升整体推理性能。_  
+> _We can use operator fusion to avoid frequent direct reading and writing of intermediate data between registers and memory, thereby improving overall inference performance  。_  
      
 ![Figure 5.png](../Images/Compiler/Figure 5.png)  
 > _Nividia通过把conv, bn, relu这三个算子融合成一个算子 fuse- CBR. 实现了三倍的推理性能提升。_  
