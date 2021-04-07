@@ -1,37 +1,37 @@
-# Halide初体验
+# Halide: Quick start   
 
-在深入了解Halide之前，我们先来体验一下Halide的黑魔法。
+Before we dive into Halide, let’s experience Halide’s magic.     
 
-进入AutoKernel的docker, docker里已有Halide的python环境，直接运行
+Enter AutoKernel's docker, there is already Halide's python environment in docker, just run    
 ```
 python data/03_halide_magic.py
 ```
-可以得到输出
+Here are the output    
 ```
 func_origin__ cost 0.510215 second
 func_parallel cost 0.122265 second
 ```
-以上这个脚本执行了一个简单的函数计算：`func[x,y] = x + 10*y`
-对比了两个函数的运行时间：
-- func_origin: 默认函数
-- func_parallel: 添加了Halide的一个调度策略：`func.parallel(y,4)`, 对y维度进行并行化，并行度为4
+The above script performs a simple function calculation：`func[x,y] = x + 10*y`
+Compare the running time of the two functions：  
+-func_origin: default function     
+-func_parallel: Added a scheduling strategy of Halide: `func.parallel(y,4)`, parallelizes the y dimension, and the parallelism is 4     
 
-结果可以看到，第二个函数的耗时是第一个函数的四分之一。
+As you can see, the second function takes a quarter of the time of the first function.    
 
-<center>这，就是Halide的魔法！</center>
+<center>This is the magic of Halide!</center>
 
-无需底层优化汇编知识，只需添加一行代码，就能得到比较好的优化效果
+No need to optimize the assembly knowledge at the bottom, just add a line of code, you can get a better optimization effect.     
 
 
-## Halide语言基础
-要想调用Halide的调度策略，首先要掌握基本的Halide语言，用Halide语言来描述算子的计算。下面以简单的函数来演示Halide语言的基本数据结构。
+## Language basic of Halide   
+If you want to call Halide's scheduling strategy, you must first master the basic Halide language, and use Halide language to describe the calculation of operators. The following simple functions are used to demonstrate the basic data structure of the Halide language.     
 
-- `变量 Var`：可以理解为函数的自变量，比如要描述一个图像的像素，需要两个变量x和y来描述 w维度和h维度的坐标。
-- `函数 Func`：和数学上的函数类似，定义了一个计算过程。复杂的计算过程可以拆成多个小函数来实现。
+-`Variable Var`: It can be understood as an independent variable of a function. For example, to describe the pixels of an image, two variables x and y are needed to describe the coordinates of the w dimension and the h dimension.    
+-`Function Func`: Similar to mathematical functions, it defines a calculation process. The complex calculation process can be divided into multiple small functions to achieve.     
 
-### 示例一
-本例子的函数计算公式为：`func(x,y)= 10*y + x`
-用Halide语言来描述这个函数：
+### Example one    
+The function calculation formula of this example is: `func(x,y)= 10*y + x`     
+Use Halide language to describe this function:     
 * Python:
     ```python
     import halide as hl
@@ -50,9 +50,9 @@ func_parallel cost 0.122265 second
 
     func(x, y) = x + 10 * y;
     ```
-Func的realize会计算函数在定义域的值并返回数值结果。调用了realize，函数才被即时编译(jit-compile),在这之前只是定义了函数的计算过程。
+Func's realize will calculate the value of the function in the domain and return the numerical result. After calling realize, the function is jit-compile. Before that, only the calculation process of the function is defined.
 
-查看计算结果
+Look up the calculation result.    
 
 * Python:
     ```python
@@ -72,7 +72,7 @@ Func的realize会计算函数在定义域的值并返回数值结果。调用了
             }
         }
     ```
-这个函数的计算是：
+The process of function is：
 ```
                     wide = 3
                   x=0 x=1 x=2
@@ -83,34 +83,34 @@ hight = 4   y=1 | 10  11  12
             y=3 | 30  31  32
 ```
 
-完整的代码在[data/03_halide_basic.py](data/03_halide_basic.py)
-可以直接运行：
+Full codes see here [data/03_halide_basic.py](data/03_halide_basic.py)
+we can run directly：
 ```
 python data/03_halide_basic.py
 ```
-另外可以调用`func.trace_stores()`来跟踪函数的值
+In addition, you can call `func.trace_stores()` to track the value of the function     
 
-### 示例二
-本示例演示如何喂入输入数据，取出输出数据
-完整的代码在[data/03_halide_feed_data.py](data/03_halide_feed_data.py)
+### Example Two    
+This example demonstrates how to feed input data and remove output data.     
+Full codes see here[data/03_halide_feed_data.py](data/03_halide_feed_data.py)
 
-本示例的函数：
+The function of this example:    
 ```
 B(x,y)=A(x,y)+1
 ```
-A是输入数据，可以定义Halide.Buffer,然后把numpy的array数据喂入buffer
+A is the input data, you can define Halide.Buffer, and then feed the numpy array data into the buffer    
 ```python
     # feed input
     input_data = np.ones((4,4),dtype=np.uint8)
     A = hl.Buffer(input_data)
 ```
-定义函数B
+Function B
 ```python
     i,j = hl.Var("i"), hl.Var("j")
     B = hl.Func("B")
     B[i,j] = A[i,j] + 1
 ```
-获取输出数据, 有以下几种方式
+There are several ways to obtain output data    
 ```python
     # 1
         output = B.realize(4,4)
@@ -126,7 +126,7 @@ A是输入数据，可以定义Halide.Buffer,然后把numpy的array数据喂入b
         print("out: \n",output_data)
 
 ```
-可以直接运行完整代码：
+We can run the full codes：
 ```
 python data/03_halide_feed_data.py
 ```
