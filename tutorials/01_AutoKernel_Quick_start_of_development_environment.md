@@ -1,73 +1,73 @@
-# AutoKernel开发环境
+# AutoKernel: Quick start of development environment
 
-在这个教程中，我们将会介绍如何安装/配置AutoKernel的开发环境，并介绍本项目所依赖的两大组件Tengine, Halide。为了减少开发者配置环境的遇到的问题，目前我们提供了Docker来配置所需的基本环境。后续我们会提供更多的环境配置方式。
+In this section, we will introduce how to install/configure the development environment of AutoKernel, and introduce two major components of this project: Tengine, Halide. In order to reduce the problems encountered by developers in configuring the environment, we currently provide Docker to configure the basic environment required. More environment configuration methods will be provided in the future.  
 
-- AutoKernel开发环境
-  - [AutoKernel 安装指引](#autokernel-安装指引)
+- AutoKernel Development Environment   
+  - [AutoKernel install wizard](#autokernel-install wizard)
   - [Halide](#halide)
   - [Tengine](#tengine)
 -------------------
 
-## AutoKernel 安装指引 
-AutoKernel提供了docker镜像，提供了AutoKernel的开发环境
+## AutoKernel install wizard     
+AutoKernel provides a docker image and a development environment for AutoKernel.    
 
-- 如果你还没安装docker,请查看[docker的官方安装文档](https://docs.docker.com/engine/install/debian/)。
+- If you has not installed docker, please see [here](https://docs.docker.com/engine/install/debian/).   
 
-- 如果你对docker不熟悉，可以参考docker使用入门教程: [菜鸟课程docker使用入门](https://www.runoob.com/docker/docker-hello-world.html)
+- If you are not familiar with Docker，please see here: [Tutorials for docker users](https://www.runoob.com/docker/docker-hello-world.html)
 
-接下来我们认为你已经安装好docker。
+Next we think you have installed docker.     
 
-1. 拉取镜像(可能需要一段时间，请耐心等待， 根据网速，可能需要10-20mins)
+1. Pull the image (may take a while, please wait patiently, depending on the network speed, it may take 10-20mins)    
     ```
     docker pull openailab/autokernel
     ```
-2. 创建容器，进入开发环境
+2. Create a container and enter the development environment     
     ```
     docker run -ti openailab/autokernel /bin/bash 
     ```
-    进入到docker容器里
+    Enter into the docker container     
     ```
     root@39bfb5ea515d:/workspace#
     ```
-    * 注意，如果你已经创建了容器，那你只需要启动容器，并且进入即可。 否则，你之前的改动不会在新创建的容器中生效。
+    * Note that if you have already created a container, you only need to start the container and enter. Otherwise, your previous changes will not take effect in the newly created container.     
 
-    查看之前创建的容器, 你可以通过命令`docker container rename `来重命名你的容器，这里，我们的容器叫做`autokernel`
+    To view the container created before, you can rename your container with the command `docker container rename`, here, our container is called `autokernel`       
     ```
     $ docker container ls -a
     CONTAINER ID        IMAGE                  COMMAND             CREATED             STATUS                       PORTS               NAMES
     ff8b59212784        openailab/autokernel   "/bin/bash"         21 hours ago        Exited (255) 2 minutes ago                       autokernel
     ```
 
-    启动容器
+    Start container    
     ```
     docker start autokernel
     ```
-    进入容器
+    Enter container   
     ```
     docker exec -ti autokernel /bin/bash
     ```
-3. docker里面已经安装好Halide, Tengine
+3. Halide, Tengine have been installed in docker    
     ```
     /workspace/Halide	# Halide
     /workspace/Tengine  # Tengine
     ```
 
-4. 克隆AutoKernel项目
+4. Clone AutoKernel     
     ```
     git clone https://github.com/OAID/AutoKernel.git
     ```
 
-至此，我们后面所需的环境文件都已经准备完毕。
+By now, the environmental documents we need later have been prepared.     
 
 ## Halide
-Halide 是一个DSL编程语言，他将算法和硬件后端分离了。本项目将使用Halide的DSL 以及IR。docker里面已经安装好Halide， 并且配置好了Python的API。
+Halide is a DSL programming language, which separates the algorithm from the hardware backend. This project will use Halide's DSL and IR. Halide has been installed in docker, and the Python API has been configured.    
 
-Halide相关的文件都在`/workspace/Halide/`文件夹下，Halide的安装文件都在`/workspace/Halide/halide-build` 文件夹下。
+Halide related files are all in the `/workspace/Halide/` folder, and the Halide installation files are all in the `/workspace/Halide/halide-build` folder.     
 
 ```
 cd /workspace/Halide/halide-build
 ```
-* Halide相关头文件在`/workspace/Halide/halide-build/include`
+* Halide related files are all in the`/workspace/Halide/halide-build/include`
     ```
     root@bd3faab0f079:/workspace/Halide/halide-build/include# ls
 
@@ -79,67 +79,67 @@ cd /workspace/Halide/halide-build
     HalideRuntimeCuda.h          HalideRuntimeOpenGLCompute.h
     HalideRuntimeD3D12Compute.h  HalideRuntimeQurt.h
     ```
-* 编译好的Halide库在`/workspace/Halide/halide-build/src`目录下, 可以看到`libHalide.so` 
+* The compiled Halide library is in `/workspace/Halide/halide-build/src` directory, where we can find `libHalide.so` 
     ```
     root@bd3faab0f079:/workspace/Halide/halide-build/src# ls 
     CMakeFiles           autoschedulers       libHalide.so.10
     CTestTestfile.cmake  cmake_install.cmake  libHalide.so.10.0.0
     Makefile             libHalide.so         runtime
     ```
-* 运行Halide小程序
+* Run Halide
     ```
     cd /workspace/Halide/halide-build
     ./tutorial/lesson_01_basics 
     ```
-    运行结果
+    execution result    
     ```
     Success!
     ```
-* 运行Halide的Python接口    
-    首先查看Python的系统路径
+* Run Halide's Python interface       
+    First check the system path of Python     
     ```
     python
     >>>import sys
     >>> sys.path
     ['', '/root', '/workspace/Halide/halide-build/python_bindings/src', '/usr/lib/python36.zip', '/usr/lib/python3.6', '/usr/lib/python3.6/lib-dynload', '/usr/local/lib/python3.6/dist-packages', '/usr/lib/python3/dist-packages']
     ```
-    可以看到Python的系统路径已经有Halide的编译后的python包路径`'/workspace/Halide/halide-build/python_bindings/src'`
+    You can see that the Python system path already has Halide's compiled python package path`'/workspace/Halide/halide-build/python_bindings/src'`
     ```
     python
     >>> import halide
     ```
-    直接`import halide`成功！
+    `import halide` means success！
 
 
 
 ## Tengine
-Tengine是一个轻量级高性能深度神经网络推理引擎。本项目将基于Tengine进行算子开发优化的工作。
+Tengine is a lightweight high-performance deep neural network inference engine. This project will be based on Tengine for operator development and optimization.   
 
-docker里面已经安装好Tengine， 相关文件都在`/workspace/Tengine/`目录下
+Tengine has been installed in docker, and related files are in the `/workspace/Tengine/` directory   
 ```
 cd /workspace/Tengine/build
 ```
-* Tengine相关头文件在`/workspace/Tengine/build/install/include`
+* Tengine related documents are in`/workspace/Tengine/build/install/include`
     ```
     root@bd3faab0f079:/workspace/Tengine/build/install/include# ls
 
     tengine_c_api.h
     tengine_cpp_api.h
     ```
-* 编译好的Tengine库在`/workspace/Tengine/build/install/lib`目录下, 可以看到`libtengine-lite.so` 
+* The compiled Tengine library is uner`/workspace/Tengine/build/install/lib` directory, where we ca find `libtengine-lite.so` 
     ```
     root@bd3faab0f079:/workspace/Tengine/build/install/lib# ls 
 
     libtengine-lite.so
     ```
-* 运行Tengine小程序
+* Run Tengine
 
-    该示例跑了Tengine在目标电脑上各个网络模型的性能benchmark
+    This example ran the performance benchmark of each network model of Tengine on the target computer     
     ```
     cd /workspace/Tengine/benchmark
     ../build/benchmark/tm_benchmark
     ```
-    运行结果
+    execution result    
     ```
     start to run register cpu allocator
     loop_counts = 1
