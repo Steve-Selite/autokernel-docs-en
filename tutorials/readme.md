@@ -1,27 +1,27 @@
-# AutoKernel教程  
+# Tutorials for AutoKernel  
     
-随着人工智能技术的发展，任何耗费大量人力的工作都将被自动化取代，码农的开发工作也不例外。**自动化**是未来发展的大方向，大趋势。那么，掌握自动化工具就显得格外重要。那么，赶紧跟着小编的AutoKernel教程，一起进军`自动化优化`领域吧~
+With the development of AI technology, any work that consumes a lot of manpower will be replaced by automation, and the development work of code is no exception. **Automation** is the general trend of future development. Thus, mastering automation tools is extremely important. Let's follow the AutoKernel tutorials and enter the field of `automation optimization`!
 
-AutoKernel教程分为初级课程和高级课程，目前开放的是初级课程
+AutoKernel tutorials are divided into elementary courses and advanced courses. Currently, only elementary courses are open.      
 
-## 初级课程
-通过本教程，你将获得的能力：
-- 熟悉AutoKernel开发环境
-- 掌握基本的Halide语言，具备描述算子能力
-- 掌握常见的优化调度策略Schedule
-- 具备快速将自动优化算子集成进Tengine框架的能力
+## Elementary Courses
+Finishing this tutorial, you will gain the ability:     
+-Familiar with AutoKernel development environment   
+-Master the basic Halide language and have the ability to describe operators    
+-Master the common optimization scheduling strategy Schedule    
+-Ability to quickly integrate automatic optimization operators into the Tengine framework    
 
 
-课程大纲：
-- 01: [AutoKernel开发环境快速入门](01_AutoKernel开发环境快速入门.md)
-- 02: [Tengine快速入门](02_Tengine快速入门.md)
-- 03: [Halide初体验](03_Halide初体验.md)
-- 04: [AutoKernel Plugin快速入门](04_AutoKernel插件指南.md)
-- 05: [Halide调度策略Schedule](05_Halide调度策略Schedule.md)
-- 06: [GEMM调度策略优化指南](06_GEMM调度策略优化指南.md)
+Courses Outline：
+- 01: [AutoKernel: Quick start of development environment](01_AutoKernel开发环境快速入门.md)
+- 02: [Tengine: Quick start](02_Tengine快速入门.md)
+- 03: [Halide: Quick start](03_Halide初体验.md)
+- 04: [AutoKernel Plugin:Quick Start](04_AutoKernel插件指南.md)
+- 05: [Halide_Schedule](05_Halide调度策略Schedule.md)
+- 06: [GEMM: How to optimize schedule](06_GEMM调度策略优化指南.md)
 
   
-课程配套代码:
+Codes related:
 - [02_tengine_tutorial.cpp](data/02_tengine_tutorial.cpp)
 - [03_halide_basic.py](data/03_halide_basic.py)
 - [03_halide_feed_data.py](data/03_halide_feed_data.py)
@@ -30,5 +30,5 @@ AutoKernel教程分为初级课程和高级课程，目前开放的是初级课�
 - [05_loop_schedule.py](data/05_loop_schedule.py)
 - [06_gemm_optimization.cpp](data/06_gemm_optimization.cpp)
 
-## 高级课程
+## Advanced Courses
   (To be continued...)
