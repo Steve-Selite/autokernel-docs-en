@@ -1,2 +1,2 @@
-# 支持硬件
+# Supported hardware
 
