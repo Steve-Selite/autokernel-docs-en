@@ -13,7 +13,7 @@ Finishing this tutorial, you will gain the ability:
 
 
 Courses Outline：
-- 01: [AutoKernel: Quick start of development environment](tutorials/01_AutoKernel_Quick_start_of_development_environment.md)
+- 01: [AutoKernel: Quick start of development environment](01_AutoKernel_Quick_start_of_development_environment.md)
 - 02: [Tengine: Quick start](02_Tengine快速入门.md)
 - 03: [Halide: Quick start](03_Halide初体验.md)
 - 04: [AutoKernel Plugin:Quick Start](04_AutoKernel插件指南.md)
