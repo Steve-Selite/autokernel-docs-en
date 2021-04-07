@@ -1,4 +1,4 @@
-# 架构  
+# Architecture  
   
   
 ![AutoKernel architecture](../Images/architecture.png)
