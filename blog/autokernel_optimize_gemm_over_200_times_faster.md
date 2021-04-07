@@ -1,69 +1,70 @@
-## AutoKernel实力展示：将GEMM的性能提升200倍!  
+## The power of AutoKernel: Optimize the performance of GEMM by 200 times!  
 
-随着AI技术的快速发展，深度学习在各个领域得到了广泛应用。深度学习模型能否成功在终端落地应用，满足产品需求，一个关键的指标就是神经网络模型的推理性能。于是，一大波算法工程师为了算法的部署转岗算子优化工程师。然而，优化代码并不是一件简单的事，它要求工程师既要精通计算机体系架构，又要熟悉算法的计算流程，于是，稍微有经验的深度学习推理优化工程师都成了各家公司争抢的“香饽饽”。人才少，需求多，算子优化自动化是未来的大趋势。  
+With the rapid development of AI technology, deep learning has been widely used in various fields. Whether the deep learning model can be successfully applied to the terminal and meet the product needs, a key indicator is the reasoning performance of the neural network model. As a result, a large wave of algorithm engineers transferred to operator optimization engineers for the deployment of algorithms. However, optimizing code is not a simple task. It requires engineers not only to be proficient in computer architecture, but also to be familiar with the calculation process of the algorithm. Therefore, a little experienced deep learning reasoning optimization engineer has become the wanted targets of various companies. With few in engineers and many in demand, operator optimization and automation is the general trend in the future.    
   
 ![automatic.png](../Images/GEMM/automatic.png)  
   
-近日，致力于降低优化门槛，提升优化开发效率的算子自动优化工具AutoKernel正式开源了。  
-  
+Recently, AutoKernel, an automatic operator optimization tool dedicated to lowering the optimization threshold and improving the efficiency of optimization development, is officially open source.    
+    
 ![autokernel.png](../Images/GEMM/autokernel.png)  
   
 ____
-### AutoKernel特色  
-* 低门槛：无需底层优化汇编的知识门槛  
-* 简单易用: 提供docker环境，无需安装环境，plugin一键集成到推理框架Tengine  
-* 高效率: 无需手写优化汇编，一键生成优化代码，一键部署  
+### Features of AutoKernel  
+* Low threshold: no knowledge threshold for bottom-level optimization compilation.   
+* Simple and easy to use: Providing a docker environment, no need to install the environment, the plugin is integrated into the inference framework Tengine with one click.   
+* High efficiency: no need to write optimized assembly, one-click to generate optimized code and one click to deploy.     
 
-AutoKernel使用业界广泛使用的自动代码生成项目Halide，通过输入计算描述和调度策略，自动生成底层代码。AutoKernel支持以plugin的形式，将生成的自动优化算子一键部署到推理框架Tengine中。
+AutoKernel uses Halide, an automatic code generation project widely used in the industry, to automatically generate the underlying code by inputting calculation descriptions and scheduling strategies. AutoKernel supports one-click deployment of the generated automatic optimization operator to the inference framework Tengine in the form of a plugin.    
 _____
-### GEMM优化教程  
-下面，本教程将带领大家一步步优化矩阵乘法GEMM。无需手工撸代码，编写繁杂冗长的底层汇编代码，只需十几行简洁的调度代码。  
+### Optimization tutorial of GEMM  
+Here, this tutorial will lead you to optimize the matrix multiplication GEMM step by step. There is no need to manually code, compile complicated and lengthy low-level assembly code, but only need a dozen lines of concise scheduling code.
   
 ![gemm.jpg](../Images/GEMM/gemm.jpg)  
   
-**两个优化宗旨：**  
-在详细讲解优化步骤前，我们先谈谈优化的本质。我们在谈”优化“的时候，计算机底层做了什么？优化的”瓶颈“是什么？为什么通过一波”优化操作“，性能就能提升呢？AutoKernel使用的Halide是如何实现自动优化的呢？  
-要解答这些疑问，我们需要了解一下硬件的基础的体系结构，了解硬件如何工作，才能在软件上实现算法的时候，尽可能去考虑利用硬件的一些特性，来做到高效的、极致的优化。  
+**Two optimization goals：**  
+Before explaining the optimization steps in detail, let's talk about the essence of optimization. When we were talking about "optimization", what did the bottom layer of the computer do? What is the "bottleneck" of optimization? Why can performance be improved through a wave of "optimization operations"? How does Halide used by AutoKernel achieve automatic optimization?    
+To answer these questions, we need to understand the basic architecture of the hardware and understand how the hardware works, so that when implementing algorithms in software, we should consider using some of the characteristics of the hardware as much as possible to achieve efficient and extreme optimization.     
   
 ![memory.png](../Images/GEMM/memory.png)  
    
-上图是典型的存储理器层次结构：主存容量大，访问速度慢，寄存器和缓存读取速度快，但容量有限。在寄存器的层级上，CPU可以在一个时钟周期内访问它们，如果CPU去访问外部的DDR的话，延迟是非常大的，大概是200个时钟周期左右。如果CPU去访问cache的话，一般需要6到12个cycle就够了。所以，一个很重要的一个优化宗旨是：**优化内存访问**，充分利用寄存器和高速缓存去存数据。  
-第二个优化宗旨是 **提高并行性** ：充分利用SIMD进行指令向量化和多核心并行。大部分现代CPU支持SIMD（Single Instruction Multiple Data，单指令流多数据流）。在同一个CPU循环中，SIMD可在多个值上同时执行相同的运算/指令。如果我们在4个数据点上进行向量化，一次计算四个数据，理论上就可以实现4倍的加速。
+The figure listed above is a typical memory processor hierarchy: the main memory has a large capacity, with a slow access speed, and the register and cache read speed is fast, but the capacity is limited. At the register level, the CPU can access them within one clock cycle. If the CPU accesses the external DDR, the delay is very large, about 200 clock cycles. If the CPU accesses the cache, it usually takes 6 to 12 cycles. Therefore, a very important optimization goal is: **Optimize memory access**, make full use of registers and caches to store data.    
+
+The second optimization goal is to **improve parallelism**: make full use of SIMD for instruction vectorization and multi-core parallelism. Most modern CPUs support SIMD (Single Instruction Multiple Data). In the same CPU cycle, SIMD can execute the same operation/instruction on multiple values at the same time. If we vectorize on 4 data points and calculate 4 data at a time, we can theoretically achieve 4 times speedup.    
    
-**运行环境搭建：**   
-AutoKernel提供了docker镜像，docker里已经配置好运行环境，进入docker即可直接运行demo代码：  
+**Operating environment preparation：**   
+AutoKernel provides a docker image, with the running environment being configured, and user can run the demo code directly after entering the docker：     
 ```  
-# 拉取镜像  
+# Pull mirror 
 docker pull openailab/autokernel  
-# 启动容器，进入开发环境  
+# Start the container and enter the development environment       
 docker run -it openailab/autokernel /bin/bash  
-# 获取代码  
+# access codes     
 git clone https://github.com/OAID/AutoKernel.git  
 cd AutoKernel/doc/tutorials/data/  
 ```  
    
-目录下的build.sh是demo的执行脚本，运行需要指定优化步骤step，可选的step是从1 到7，其中step= 1 是默认不优化的，step=7是最极致优化的。  
-**优化效果：**   
+The build.sh in the directory is the execution script of the demo. To run, user need to specify the optimization step 'step'. The optional step is from 1 to 7, where step=1 is not optimized by default, and step=7 is the most optimized.      
+**Effect of optimization：**   
 ```   
-# 执行demo  
+# run demo  
 ./build.sh 1  
 ./build.sh 7   
 ```   
   
-下图展示了在Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz的电脑上的优化效果，无需手工撸代码，无需编写繁杂冗长的底层汇编代码，只需十几行简洁的调度代码, 就能性能优化200+倍。 
+The following figure shows the optimization effect on a computer with Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz. There is no need to manually write code, no need to write complicated and lengthy low-level assembly code, only a dozen lines of concise scheduling code , The performance can be optimized by 200+ times.    
    
 ![Figure1.png](../Images/GEMM/Figure1.png)  
    
-**下面是详细的优化步骤：**  
+**Detailed optimizatio steps：**  
 **STEP 1**  
-第一个步骤是不带任何优化的。用Halide语言直接描述GEMM的计算过程。  
+The first step is without any optimization. Use Halide language to directly describe the calculation process of GEMM.  
 ```   
 1. Var x,y;
 2. RDom k(0, K);
 3. Func gemm("gemm");
 4. gemm(x, y) += A(k, y) * B(x, k);
 ```  
-计算M=N=K=640的矩阵乘法。运行脚本第一个参数指定step=1。耗时结果如下：  
+Calculate the matrix multiplication of M=N=K=640. The first parameter of the running script specifies step=1. The time-consuming results are as follows：  
 ```
 root@bd3faab0f079:/AutoKernel/doc/tutorials/data# ./06_build.sh 1
 step =  1
@@ -71,23 +72,23 @@ M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      240.8523
 ```   
 
 **STEP 2**  
-这一步我们采用分块tile。分块的目的是为了充分利用缓存。如果原来的循环较大，tile分块改成小块数据去计算，可以使得每次计算的数据都比较舒适地呆在缓存里，不用经历重复的驱逐（在缓存中重复的添加和删除数据)。分块后进行reorder操作，交换两个嵌套循环的顺序，目的是最内层的内存访问友好。我们按照x,y维度划分成16x8的小分块去计算：  
+In this step, we use tiled tiles. The purpose of Tiling is to make full use of the cache. If the original loop is large, the tiles are changed to small pieces of data to calculate, so that the data calculated each time can stay in the cache more comfortably, without repeated eviction (repeat adding and deleting data in the cache) . The reorder operation is performed after the block is divided, the order of the two nested loops is exchanged, and the purpose is to make the innermost memory access friendly. We divide the x and y dimensions into 16x8 small blocks to calculate：  
 ```   
 1.	gemm.update()  
 2.	    .tile(x, y, xo, yo, xi, yi, 16, 8)  
 3.	    .reorder(xi, yi, k, xo, yo);  
 ```
    
-执行结果     
+execution result        
 ```
 root@bd3faab0f079:/AutoKernel/doc/tutorials/data# ./06_build.sh 2
 step =  2
 M N K = 640 640 640     err 0.00        [rep 50] halide | blas  81.8148 ms      1.1281 ms
 ```
-> 性能从240ms优化到82ms，提升了近3倍。  
+> Performance has been optimized from 240ms to 82ms, an increase of nearly 3 times.      
    
 **STEP 3**   
-我们在上一步的基础上增加向量化vectorize。向量化是把几个标量计算（scale)转换为一个向量计算（vector),充分利用SIMD向量指令。大部分现代CPU支持SIMD（Single Instruction Multiple Data，单指令流多数据流）。在同一个CPU循环中，SIMD可在多个值上同时执行相同的运算/指令。   
+We add 'vectorize' based on the previous step. Vectorization is to convert several scalar calculations (scale) into a vector calculation (vector), making full use of SIMD vector instructions. Most modern CPUs support SIMD (Single Instruction Multiple Data). In the same CPU cycle, SIMD can execute the same operation/instruction on multiple values at the same time.        
 ```   
 1.	gemm.update()  
 2.	       .tile(x, y, xo, yo, xi, yi, 16, 8)  
@@ -95,16 +96,16 @@ M N K = 640 640 640     err 0.00        [rep 50] halide | blas  81.8148 ms      
 4.	       .vectorize(xi, 8);  
 ```   
 
-执行结果   
+execution result       
 ```   
 root@bd3faab0f079:/AutoKernel/doc/tutorials/data# ./06_build.sh 3
 step =  3
 M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      27.5433 ms      1.1445 ms
 ```     
->性能从82ms优化到27ms，又加速了接近3倍。可以看到，围绕前面提到的两条优化宗旨：优化内存访问和提高并行性，从step1到step3，性能已经提升了近9倍。   
+>The performance was optimized from 82ms to 27ms, which was accelerated by nearly 3 times. It can be found that around the two optimization purposes mentioned above: optimizing memory access and improving parallelism, from step1 to step3, the performance has been improved by nearly 9 times.       
    
 **STEP 4**   
-调度策略在step3的基础上增加并行化parallel。对一个循环并行化是把循环的每次迭代分给多个线程或者处理器去同时处理，每个线程处理通过代码段（loop body),但是处理不同的数据。   
+The scheduling strategy adds parallelization on the basis of step3. Parallelizing a loop is to divide each iteration of the loop into multiple threads or processors for simultaneous processing. Each thread processes through the code segment (loop body), but processes different data.        
 ```   
 1.	gemm(x, y) += A(k, y) * B(x, k);  
 2.	gemm.update()  
@@ -113,16 +114,16 @@ M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      27.5433 
 5.	    .vectorize(xi, 8)  
 6.	    .parallel(yo); 
 ```    
-执行结果    
+execution result    
 ```   
 root@bd3faab0f079:/home/chunying/AutoKernel/doc/tutorials# ./06_build.sh 4
 step =  4
 M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      7.2605 ms       1.1605 ms
 ```   
-> 增加并行化后，build.sh默认指定四线程，性能直接翻了近4倍，从27ms到7.3ms。   
+> After adding parallelization, build.sh specifies four threads by default, and the performance is directly increased by nearly 4 times, from 27ms to 7.3ms.   
    
 **STEP 5**  
-调度策略在上一步的基础上增加unroll展开。如果循环体内的语句没有数据相关依赖，循环展开可以增加并发执行的机会，使得更充分利用寄存器，减少循环时每个操作内存加载和保存的次数。   
+The scheduling strategy adds unroll expansion on the basis of the previous step. If the statements in the loop body have no data-related dependencies, loop unrolling can increase the chance of concurrent execution, make full use of registers, and reduce the number of times each operation memory is loaded and saved during the loop.          
 ```   
 1.	gemm.update()  
 2.	    .tile(x, y, xo, yo, xi, yi, 16, 8)  
@@ -132,20 +133,20 @@ M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      7.2605 m
 6.	    .unroll(xi)  
 7.	    .unroll(yi,2);  
 ```   
-执行结果   
+execution result      
 ```   
 root@bd3faab0f079:/AutoKernel/doc/tutorials/data# ./06_build.sh 5
 step =  5
 M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      4.7617 ms       1.1597 ms
 ```   
-> unroll展开后，性能从7.3ms优化到4.8ms。  
+> After unroll is expanded, the performance is optimized from 7.3ms to 4.8ms.        
 
 **STEP 6**  
-前面的分块成 16 x 8的小kernel, 这一步先划分成 16 x 32的分块，然后把每个分块再分成 16 x 8的子分块。我们把最外层的两层循环合并到一层，并对这一层进行并行化。这一步计算描述多了一个prod函数来定义子分块的计算，prod函数的计算公式和总的gemm是一样的，我们通过 compute_at指定在 yi维度之下计算prod，则prod计算的是 16x8的小kernel, 大致逻辑如下：   
+The previous block is divided into 16 x 8 small kernels. This step is first divided into 16 x 32 blocks, and then each block is divided into 16 x 8 sub-blocks. We merge the two outermost loops into one layer and parallelize this layer. The calculation description in this step adds a prod function to define the calculation of sub-blocks. The calculation formula of the prod function is the same as the total gemm. We use compute_at to specify the calculation of prod under the one dimension, and the calculation of prod is 16x8. kernel, the general logic is as follows:       
    
 ![step6.png](../Images/GEMM/step6.png)   
    
-**总的代码如下：**   
+**Codes are listed below：**   
 ```   
 1.	Func prod;  
 2.	prod(x, y) += A(k, y) * B(x, k);  
@@ -168,20 +169,20 @@ M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      4.7617 m
 19.	    .unroll(y)  
 20.	    .unroll(k, 2);
 ```   
-执行结果   
+execution result   
 ```  
 root@bd3faab0f079:/AutoKernel/doc/tutorials/data# ./06_build.sh 6
 step =  6
 M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      3.1824 ms       1.1373 ms
 ```  
-> 这一步距离STEP1性能已经优化了近80倍了，性能越来越接近OpenBlas了。   
+> The performance of this step has been optimized by nearly 80 times from STEP1, and the performance is getting closer and closer to OpenBlas.        
 
 **STEP 7**  
-这一步添加的操作是对矩阵B进行数据重排，使得在计算小kernel 16x8时，内存读取更顺畅。因为小kernel的x维度是按照16划分的，因此重排数据B的x维度也是按照16重排。   
+The operation added in this step is to rearrange the data of matrix B to make the memory read smoother when calculating the small kernel 16x8. Because the x dimension of the small kernel is divided according to 16, the x dimension of rearranged data B is also rearranged according to 16.      
    
 ![interleave.png](../Images/GEMM/interleave.png)   
   
-**总的代码如下：**   
+**Codes are listed below：**   
 ```   
 1.	Func B_interleave("B"), Bs("Bs");  
 2.	Bs(x, y, xo) = B(xo * 16 + x, y);  
@@ -213,11 +214,11 @@ M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      3.1824 m
 28.	    .unroll(x)  
 29.	    .vectorize(yi).parallel(yo, 4);  
 ```   
-执行结果   
+execution result   
 ```
 root@bd3faab0f079:/AutoKernel/doc/tutorials/data# ./06_build.sh 7
 step =  7
 M N K = 640 640 640     err 0.00        [rep 50] autokernel | blas      1.1957 ms       1.1425 ms
 ```   
 
-至此，我们的每一步调优策略始终都围绕两条优化宗旨“优化内存访问”，“提高并行性”展开优化，到最后性能已经与OpenBlAS差不多了，距离STEP1已经加速了200+倍了。
+So far, every step of our tuning strategy has always been optimized around the two optimization purposes "optimizing memory access" and "improving parallelism". In the end, the performance is almost the same as OpenBlAS, and the distance from STEP1 has been accelerated by 200+ times.     
