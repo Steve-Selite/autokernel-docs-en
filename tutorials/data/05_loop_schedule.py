@@ -13,7 +13,7 @@ def origin():
     func.print_loop_nest()
 
     '''
-    运行结果：
+    execution result：
     produce func_origin:
     for y:
       for x:
@@ -29,7 +29,7 @@ def reorder():
     func.print_loop_nest()
 
     '''
-    运行结果：
+    execution result：
     produce func_reorder:
     for x:
       for y:
@@ -46,7 +46,7 @@ def split():
     out = func.realize(w, h)
     func.print_loop_nest()
     '''
-    运行结果：
+    execution result：
     produce func_split:
     for y:
       for x.x_outter:
@@ -64,7 +64,7 @@ def fuse():
     out = func.realize(w, h)
     func.print_loop_nest()
     '''
-    运行结果：
+    execution result：
     produce func_fuse:
       for x.xy_fuse:
         func_fuse(...) = ...
@@ -81,7 +81,7 @@ def tile():
     out = func.realize(w, h)
     func.print_loop_nest()
     '''
-    运行结果：
+    execution result：
     produce func_tile:
     for y.yo:
       for x.xo:
@@ -100,7 +100,7 @@ def vectorize():
     out = func.realize(w, h)
     func.print_loop_nest()
     '''
-    运行结果：
+    execution result：
     produce func_vectorize:
     for y:
       for x.x:
@@ -118,7 +118,7 @@ def unroll():
     out = func.realize(w, h)
     func.print_loop_nest()
     '''
-    运行结果：
+    execution result：
     produce func_unroll:
     for y:
       for x.x:
@@ -136,7 +136,7 @@ def parallel():
     out = func.realize(w, h)
     func.print_loop_nest()
     '''
-    运行结果：
+    execution result：
     produce func_parallel:
     for y:
       parallel x.x:
