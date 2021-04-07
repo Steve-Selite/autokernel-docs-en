@@ -1,7 +1,7 @@
-# Halide调度策略Schedule
-本教程将讲解以下schedules。每个schedule除了给出C语言的伪代码，更深入讲解了为何这个schedule能有优化效果，认识schedule的优化本质。
+# Halide Schedule
+This section will explain the following schedules. In addition to giving pseudo-code in C language, each schedule explains in more depth why this schedule can be optimized and understands the optimization nature of schedule.    
 
-本教程配套的代码是：[data/05_loop_schedule.py](data/05_loop_schedule.py)。
+The code for this section is：[data/05_loop_schedule.py](data/05_loop_schedule.py)。
 
   - reorder
   - split
@@ -12,23 +12,23 @@
   - parallel
   - compute_at
   - compute_root
-## 优化宗旨
+## Optimize Goal   
 
-1.提高局部性，提高缓存命中率
+1.Improve locality, improve cache hit rate    
 
-    下图展示了一个典型的存储器层次结构，主存是比较大的存储空间，但速度慢，缓存的速度要快很多，但是容量小。因此优化策略是提高局部性，使得数据尽可能在缓存中，提高缓存命中率。
+    The following figure shows a typical memory hierarchy. The main memory is a relatively large storage space, but the speed is slow. The cache speed is much faster, but the capacity is small. Therefore, the optimization strategy is to improve the locality, make the data in the cache as much as possible, and improve the cache hit rate.     
 
-2.提高并行性：指令集并行，数据级并行，任务级并行
+2.Improve parallelism: instruction set parallelism, data-level parallelism, task-level parallelism   
 
 
 ![memory](data/memory.png)
 
-## Halide调试接口
-Halide的函数提供了一个调试打印循环调度策略的接口：
+## Halide Debug interface
+Halide's function provides an interface for debugging print cycle scheduling strategy：
 ```
 func.print_loop_nest()
 ```
-一个简单的函数为例，查看循环的遍历顺序
+Take a simple function as an example to view the traversal order of the loop    
 ```python
 def origin():
     x, y = hl.Var("x"), hl.Var("y")
@@ -38,7 +38,7 @@ def origin():
     out = func.realize(w, h)
     func.print_loop_nest()
 ```
-运行结果：
+Execution result：
 ```
     produce func_origin:
     for y:
@@ -48,11 +48,11 @@ def origin():
 
 ---------------------
 
-下面开始详细讲解每个调度策略Schedule。
+Let's start with a detailed explanation of each scheduling strategy.    
 
-## fuse 合并
+## fuse 
 ```cpp
-# 合并之前
+# Before Fusing
 min = a[0];
 for (i=0; i<n; i++)
     if (a[i]<min)
@@ -62,7 +62,7 @@ for (i=0; i<n; i++)
     if (a[i]>max)
        max = a[i];
 
-# 合并之后
+# After Fusing
 min = a[0];
 max = a[0];
 for (i=0; i<n; i++){
@@ -73,9 +73,9 @@ for (i=0; i<n; i++){
 }
 
 ```
-fuse操作的本质是复用两个独立循环的数据。每一次从主内存获取数据时，CPU会将该数据以及其邻近的数据加载到缓存中，以便利访问的局部性（locality of reference)。如果循环大小N足够大，独立两个循环访问数据可能会造成第二个循环访问数据时发生缓存缺失（cache miss）。合并两个循环的好处是可以减少cache miss的发生。
+The essence of fuse operation is to multiplex two independent cycles of data. Every time data is obtained from the main memory, the CPU loads the data and its neighboring data into the cache to facilitate the locality of reference. If the loop size N is large enough, two independent loops accessing the data may cause a cache miss when the second loop accesses the data. The advantage of merging the two loops is to reduce the occurrence of cache misses.     
 
-以下调用Halide的fuse:
+The following calls Halide's fuse:
 ```
 def fuse():
     func = hl.Func("func_fuse")
@@ -86,19 +86,19 @@ def fuse():
     out = func.realize(w, h)
     func.print_loop_nest()
 '''
-运行结果：
+Execution result：
 ```
     produce func_fuse:
       for x.xy_fuse:
         func_fuse(...) = ...
 '''
-## Unroll 循环展开
+## Unroll   
 ```cpp
-# 循环展开之前
+# Before Unrolling
 for(i=0; i<n; i++)
     a[i] = 2 * b[i] + 1;
 
-# 循环展开之后（factor=8)
+# After Unrolling（factor=8)
 for(i=0; i<n; i+=8){
     a[i] = 2 * b[i] + 1;
     a[i+1] = 2 * b[i+1] + 1;
@@ -110,11 +110,11 @@ for(i=0; i<n; i+=8){
     a[i+7] = 2 * b[i+7] + 1;
 }
 ```
-循环展开的目的是：使得更充分利用寄存器，减少循环时每个操作内存加载和保存的次数。提高寄存器的利用率，充分利用寄存器来缓存数据，这样可以大大减少访问内存的延迟，从而有效提升内存带宽。
+The purpose of loop unrolling is to make full use of registers and reduce the number of times that the memory is loaded and saved for each operation during the loop. Improve the utilization of registers and make full use of registers to cache data, which can greatly reduce the latency of accessing memory, thereby effectively improving memory bandwidth.   
 
-循环展开有一个参数(unroll factor)，这个参数的设置策略是：根据数据类型，使得匹配硬件的cache line大小。比如cache line是64 bytes, 那么设置 unroll factor为 9或者10就不那么合适了，一般数据类型是 4byte或者8byte, 那么设置这个参数为8或者16是比较合适的，因为这样刚好一次循环展开的内存读取大小是大概一个cache line的大小。
+The unrolling loop has a parameter (unroll factor). The setting strategy of this parameter is to match the cache line size of the hardware according to the data type. For example, if the cache line is 64 bytes, it is not appropriate to set the unroll factor to 9 or 10. The general data type is 4byte or 8byte, then it is more appropriate to set this parameter to 8 or 16, because it just happens to unroll the memory once. The read size is about the size of a cache line.   
 
-以下调用Halide的unroll:
+Then call the unroll of Halide:     
 ```
 def unroll():
     func = hl.Func("func_unroll")
@@ -125,7 +125,7 @@ def unroll():
     out = func.realize(w, h)
     func.print_loop_nest()
 ```
-运行结果：
+Execution result：
 ```
     produce func_unroll:
     for y:
@@ -133,19 +133,19 @@ def unroll():
         unrolled x.v1 in [0, 1]:
           func_unroll(...) = ...
 ```
-## Vectorize 向量化
+## Vectorize    
 ```
-# 向量化之前
+# Before vectorizing   
 for(i=0;i<100;i++)
     a[i]= b[i] + 1
 
-# 向量化之后
+# After vectorizing   
 for(i=0;i<100;i+=4)
     a[i:i+4]= b[i:i+4] + 1
 ```
-向量化是把几个标量计算（scale)转换为一个向量计算（vector),充分利用SIMD向量指令。大部分现代CPU支持SIMD（Single Instruction Multiple Data，单指令流多数据流）。在同一个CPU循环中，SIMD可在多个值上同时执行相同的运算/指令（如加、乘等）。如果我们在4个数据点上同时运行SIMD指令，就会直接实现4倍的加速。
+Vectorization is to convert several scalar calculations (scale) into a vector calculation (vector), making full use of SIMD vector instructions. Most modern CPUs support SIMD (Single Instruction Multiple Data). In the same CPU cycle, SIMD can execute the same operation/instruction (such as addition, multiplication, etc.) on multiple values at the same time. If we run SIMD instructions on 4 data points at the same time, it will directly achieve a 4x speedup.    
 
-以下调用Halide的vectorize:
+The following calls Halide's vectorize:
 ```
 def vectorize():
     func = hl.Func("func_vectorize")
@@ -156,7 +156,7 @@ def vectorize():
     out = func.realize(w, h)
     func.print_loop_nest()
 ```
-运行结果：
+Execution result：
 ```
     produce func_vectorize:
     for y:
@@ -176,9 +176,9 @@ for(i=0; i<n; i++)
     for(j=0; j<m; j++)
         a[i][j] = b[i][j] + c[i][j];
 ```
-reorder操作是交换两个嵌套循环的顺序，使得最内层的内存访问友好。比如一个二维矩阵的数据保存是row-major顺序（行主序作为存储顺序）。reorder调整循环顺序后，可以使得矩阵的数据访问是row-by-row地访问，这样的访问和cache的预取是吻合的，提高了数据的局部性。
+The reorder operation is to exchange the order of two nested loops to make the innermost memory access friendly. For example, the data of a two-dimensional matrix is stored in row-major order (row-major order is the storage order). After the reorder adjusts the loop sequence, the data access of the matrix can be made row-by-row. Such access is consistent with cache prefetching, which improves the locality of the data.    
 
-以下调用Halide的reoder:
+The following calls Halide's reoder:    
 ```
 def reorder():
     func = hl.Func("func_reorder")
@@ -187,7 +187,7 @@ def reorder():
     out = func.realize(w, h)
     func.print_loop_nest()
 ```
-运行结果：
+Execution result：  
 ```
     produce func_reorder:
     for x:
@@ -195,13 +195,13 @@ def reorder():
         func_reorder(...) = ...
     '''
 ```
-## parallize 并行化
+## parallize
 ```
-# 并行化之前
+# Before Parallizing
 for(i=0;i<100;i++)
     a[i]= sin(PI*i/100)
 
-# 并行化
+# After Parallizing
 Thread 1: 0, 2, 3, ..., 24
         for(i=0;i<25;i++)
             a[i]= sin(PI*i/100)
@@ -218,26 +218,26 @@ Thread 4: 75,76,77, ...,99
         for(i=75;i<100;i++)
             a[i]= sin(PI*i/100)
 ```
-对一个循环并行化是把循环的每次迭代分给多个线程或者处理器去同时处理，每个线程处理通过代码段（loop body),但是处理不同的数据。
+Parallelizing a loop is to allocate each repetition of the loop to multiple threads or processors for simultaneous processing. Each thread processes through the code segment (loop body), but processes different data.    
 
-## tile 分块
+## tile    
 
-分块的目的同样是为了充分利用缓存。如果原来的循环较大，tile分块改成小块数据去计算，可以使得每次计算的数据都比较舒适地呆在缓存里，不用经历重复的驱逐（在缓存中重复的添加和删除数据，即缓存颠簸 cache thrashing)。
+The purpose of chunking is also to make full use of the cache. If the original loop is large, the tiles are changed to small blocks of data to calculate, so that the data calculated each time can stay in the cache more comfortably, without experiencing repeated evictions (repeat adding and deleting data in the cache, That is, cache thrashing).    
 
-使用Halide的tile要指定分块大小,y_factor, x_factor
+Use Halide's tile to specify the block size, y_factor, x_factor    
 ```
 for y in range(n):
     for x in range(m):
         ...
 
-# 执行 tile
+# Execute tile
 for y in range(n//y_factor):
     for x in range(m//x_factor):
         for yi in range(y_factor):
             for xi in range(x_factor):
                 ...
 ```
-下面调用Halide的tile：
+Below call Halide's tile:
 ```
 def tile():
     func = hl.Func("func_tile")
@@ -249,7 +249,7 @@ def tile():
     out = func.realize(w, h)
     func.print_loop_nest()
 ```
-运行结果：
+Execute result：
 ```
     produce func_tile:
     for y.yo:
@@ -258,9 +258,9 @@ def tile():
           for x.xi in [0, 3]:
             func_tile(...) = ...
 ```
-后续的几个schedule
+The next schedules
   - compute_at
   - compute_root
   - update
 
-请大家自己执行[data/05_loop_schedule.py](data/05_loop_schedule.py)的代码，欢迎提交补充文档
+Please execute the code of [data/05_loop_schedule.py](data/05_loop_schedule.py) by yourself, welcome to submit supplementary documents
