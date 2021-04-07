@@ -14,11 +14,11 @@ Finishing this tutorial, you will gain the ability:
 
 Courses Outline：
 - 01: [AutoKernel: Quick start of development environment](01_AutoKernel_Quick_start_of_development_environment.md)
-- 02: [Tengine: Quick start](02_Tengine快速入门.md)
-- 03: [Halide: Quick start](03_Halide初体验.md)
-- 04: [AutoKernel Plugin:Quick Start](04_AutoKernel插件指南.md)
-- 05: [Halide_Schedule](05_Halide调度策略Schedule.md)
-- 06: [GEMM: How to optimize schedule](06_GEMM调度策略优化指南.md)
+- 02: [Tengine: Quick start](02_Tengine_Quick_start.md)
+- 03: [Halide: Quick start](03_Halide_Quick_start.md)
+- 04: [AutoKernel Plugin:Quick Start](04_AutoKernel_Plugin.md)
+- 05: [Halide_Schedule](05_Halide_Schedule.md)
+- 06: [GEMM: How to optimize schedule](06_GEMM_How_to_optimize_schedule.md)
 
   
 Codes related:
