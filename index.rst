@@ -41,19 +41,25 @@ Welcome to AutoKernel Docs!
   demo_guides/arm64_cpu
   demo_guides/x86_cpu
   demo_guides/opencl
-  demo_guides/cuda
+  demo_guides/cuda_matmul/cuda
 
 .. toctree::
   :maxdepth: 1
   :caption: Tutorials
   :name: sec-source-compile
 
-  tutorials/tutorial
+  tutorials/01_AutoKernel_Quick_start_of_development_environment   
+  tutorials/02_Tengine_Quick_start    
+  tutorials/03_Halide_Quick_start   
+  tutorials/04_AutoKernel_Plugin    
+  tutorials/05_Halide_Schedule       
+  tutorials/06_GEMM_How_to_optimize_schedule       
 
 
 .. toctree::
   :maxdepth: 1
   :caption: Blog
 
-  blog/ai_compiler
+  blog/ai_compiler overview   
+  blog/autokernel_optimize_gemm_over_200_times_faster     
 
