@@ -1,4 +1,5 @@
 # Halide Schedule
+The schedule is the other integral part of a Halide program; it specifies how the algorithm computation is to be structured. This schedule entails specifying the storage allocation and computation of the stages of the pipeline in relation with each other. It also entails specifying how each stage is to be computed.    
 This section will explain the following schedules. In addition to giving pseudo-code in C language, each schedule explains in more depth why this schedule can be optimized and understands the optimization nature of schedule.    
 
 The code for this section is：[data/05_loop_schedule.py](data/05_loop_schedule.py)。
